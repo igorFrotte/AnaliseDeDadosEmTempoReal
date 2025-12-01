@@ -1,0 +1,41 @@
+# ---- Ambiente virtual ----
+venv/
+.env/
+.venv/
+
+# ---- Cache e metadados ----
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+
+# ---- Dados e modelos ----
+data/
+models/
+output/
+
+# (opcional) manter o diretório vazio no repositório:
+# !data/.gitkeep
+# !models/.gitkeep
+# !output/.gitkeep
+
+# ---- Arquivos temporários ----
+*.tmp
+*.bak
+*.swp
+*.DS_Store
+*.ipynb_checkpoints
+*.parquet
+*.csv
+
+# ---- Configuração Docker e Spark ----
+docker-compose.override.yml
+*.pid
+logs/
+spark-warehouse/
+
+# ---- Arquivos do sistema ----
+Thumbs.db
+ehthumbs.db
+Desktop.ini

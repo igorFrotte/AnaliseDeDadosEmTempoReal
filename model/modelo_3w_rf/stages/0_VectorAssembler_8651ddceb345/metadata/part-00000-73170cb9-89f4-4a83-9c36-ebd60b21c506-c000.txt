@@ -1,0 +1,1 @@
+{"class":"org.apache.spark.ml.feature.VectorAssembler","timestamp":1764607225307,"sparkVersion":"4.0.1","uid":"VectorAssembler_8651ddceb345","paramMap":{"outputCol":"features_vec","inputCols":["P-TPT","T-TPT","P-MON-CKP","T-JUS-CKP","P-JUS-CKGL"]},"defaultParamMap":{"outputCol":"VectorAssembler_8651ddceb345__output","handleInvalid":"error"}}

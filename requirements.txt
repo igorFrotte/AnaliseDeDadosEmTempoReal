@@ -1,0 +1,8 @@
+pandas
+confluent-kafka
+scikit-learn
+joblib
+pyspark
+pyarrow
+fastparquet
+kafka-python
