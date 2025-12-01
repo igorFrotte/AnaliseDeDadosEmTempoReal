@@ -7,7 +7,6 @@ import random
 KAFKA_BOOTSTRAP = "localhost:9092"
 TOPIC = "telemetry.raw"
 
-# Caminho relativo a partir da pasta onde o script estiver
 CSV_PATH = "../data/petrobras_3w_dados.csv"
 
 def carregar_dados():
