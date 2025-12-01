@@ -10,6 +10,10 @@ __pycache__/
 *.pyd
 *.log
 
+# ---- Cjheckpoints ----
+checkpoint*/
+*/checkpoint*/
+
 # ---- Dados e modelos ----
 data/
 models/
