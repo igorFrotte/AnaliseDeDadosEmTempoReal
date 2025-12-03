@@ -2,7 +2,6 @@ from kafka import KafkaProducer
 import json
 import time
 import pandas as pd
-import random
 
 KAFKA_BOOTSTRAP = "localhost:9092"
 TOPIC = "telemetry.raw"

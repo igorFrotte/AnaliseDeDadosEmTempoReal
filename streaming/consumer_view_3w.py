@@ -9,6 +9,7 @@ from pyspark.sql.types import (
     DoubleType,
     IntegerType,
 )
+from pyspark.sql import DataFrame
 from pyspark.ml import PipelineModel
 
 # ==========================
@@ -28,9 +29,16 @@ MODEL_PATH = os.path.join(BASE_DIR, "train", "modelo_3w_rf")
 # Caminho para o checkpoint do streaming (pasta será criada se não existir)
 CHECKPOINT_PATH = os.path.join(BASE_DIR, "checkpoint_3w_stream")
 
+# Caminho para salvar predições que serão usadas pelo dashboard
+VIEW_PATH = os.path.join(BASE_DIR, "view", "predicoes")
+
+# Garante que a pasta "view" exista (Spark cria "predicoes" internamente)
+os.makedirs(os.path.dirname(VIEW_PATH), exist_ok=True)
+
 print("BASE_DIR     =", BASE_DIR)
 print("MODEL_PATH   =", MODEL_PATH)
 print("CHECKPOINT   =", CHECKPOINT_PATH)
+print("VIEW_PATH    =", VIEW_PATH)
 
 # ==========================
 # INICIALIZAÇÃO DO SPARK
@@ -47,12 +55,12 @@ spark = (
     .getOrCreate()
 )
 
-spark.sparkContext.setLogLevel("WARN")
+spark.sparkContext.setLogLevel("ERROR")
 
 # ==========================
 # ESQUEMA DO JSON RECEBIDO
 # ==========================
-# Este schema DEVE refletir exatamente o que o producer envia.
+# Este schema deve refletir exatamente o que o producer envia.
 
 schema = StructType(
     [
@@ -113,7 +121,7 @@ model = PipelineModel.load(MODEL_PATH)
 
 predictions = model.transform(df_clean)
 
-# Seleciona as colunas que queremos exibir
+# Seleciona as colunas que queremos exibir / salvar
 output = predictions.select(
     "timestamp_envio",
     *features,
@@ -122,10 +130,39 @@ output = predictions.select(
 )
 
 # ==========================
-# SAÍDA NO CONSOLE
+# FUNÇÃO PARA SALVAR CADA MICRO-LOTE EM CSV (PARA O DASHBOARD)
 # ==========================
 
-query = (
+def salvar_batch_csv(batch_df: DataFrame, batch_id: int):
+    """
+    Salva o micro-lote de previsões em CSV, cada batch em uma subpasta própria:
+    view/predicoes/batch_<batch_id>/
+
+    Isso evita sobrescrever os dados anteriores e permite acumular registros
+    para visualização (matriz de confusão, gráficos, etc.).
+    """
+    if batch_df.rdd.isEmpty():
+        return
+
+    # Subpasta específica deste batch
+    batch_path = os.path.join(VIEW_PATH, f"batch_{batch_id}")
+
+    (
+        batch_df
+        .coalesce(1)  # 1 arquivo por batch
+        .write
+        .mode("overwrite")      # sobrescreve apenas a subpasta deste batch, não o diretório raiz
+        .option("header", True)
+        .csv(batch_path)
+    )
+
+
+# ==========================
+# SAÍDAS DO STREAMING
+# ==========================
+
+# Stream 1: console (como antes)
+query_console = (
     output.writeStream.outputMode("append")
     .format("console")
     .option("truncate", "false")
@@ -133,4 +170,14 @@ query = (
     .start()
 )
 
-query.awaitTermination()
+# Stream 2: grava o último batch em CSV na pasta "view/predicoes"
+query_csv = (
+    output.writeStream
+    .outputMode("append")
+    .foreachBatch(salvar_batch_csv)
+    .start()
+)
+
+# Espera encerramento (normalmente via Ctrl+C)
+query_console.awaitTermination()
+query_csv.awaitTermination()

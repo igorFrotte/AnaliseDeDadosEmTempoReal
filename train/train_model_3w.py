@@ -23,7 +23,7 @@ df = (
     spark.read
          .option("header", True)
          .option("inferSchema", True)
-         .csv("../data/petrobras_3w_dados.csv")
+         .csv("../data/petrobras_3w_dados_treinamento.csv")
 )
 
 # =====================================
